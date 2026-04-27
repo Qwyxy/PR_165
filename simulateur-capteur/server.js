@@ -24,7 +24,7 @@ connectDB()
 async function saveSensorData(sensorType, value) {
     try {
         const db = client.db(dbName)
-        const collection = db.collection(sensorType)
+        const collection = db.collection("data")
 
         await collection.insertOne({
             value: value,

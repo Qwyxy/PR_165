@@ -99,7 +99,7 @@ Toutes les simulations se mettent à jour toutes les 5 secondes et les données 
 ## Base de données
 
 - **Base de données** : `sensors`
-- **Collections** : `temperature`, `humidity`, `light_upper`, `light_lower`, `co2`
+- **Collection** : `data`
 - **Structure des documents** :
   ```json
   {
