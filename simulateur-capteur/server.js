@@ -1,6 +1,40 @@
 const express = require("express")
+const { MongoClient } = require("mongodb")
 const app = express()
 const PORT = 3000
+
+// MongoDB connection
+const uri = "mongodb://localhost:27017"
+const client = new MongoClient(uri)
+const dbName = "sensors"
+
+// Connect to MongoDB
+async function connectDB() {
+    try {
+        await client.connect()
+        console.log("Connected to MongoDB")
+    } catch (error) {
+        console.error("MongoDB connection error:", error)
+    }
+}
+
+connectDB()
+
+// Function to save sensor data
+async function saveSensorData(sensorType, value) {
+    try {
+        const db = client.db(dbName)
+        const collection = db.collection(sensorType)
+
+        await collection.insertOne({
+            value: value,
+            timestamp: new Date(),
+            sensor: sensorType
+        })
+    } catch (error) {
+        console.error(`Error saving ${sensorType} data:`, error)
+    }
+}
 
 // Fake temperature sensor
 const TEMPBASE = 20
@@ -12,6 +46,9 @@ function fakeTemp() {
     const variation = (Math.random() - 0.5) * 2 * MAX_VARIATION;
     temperature += variation;
     temperature = Math.max(10, Math.min(35, temperature));
+
+    // Save to database
+    saveSensorData("temperature", parseFloat(temperature.toFixed(2)));
 }
 setInterval(fakeTemp, 5000);
 
@@ -33,6 +70,9 @@ function fakeHumidity() {
     const variation = (Math.random() - 0.5) * 2 * MAX_HUMIDITY_VARIATION;
     humidity += variation;
     humidity = Math.max(20, Math.min(90, humidity));
+
+    // Save to database
+    saveSensorData("humidity", parseFloat(humidity.toFixed(2)));
 }
 setInterval(fakeHumidity, 5000);
 
@@ -53,6 +93,9 @@ function fakeLight() {
     const variation = (Math.random() - 0.5) * 2 * MAX_LIGHT_VARIATION;
     light += variation;
     light = Math.max(0, Math.min(1000, light));
+
+    // Save to database
+    saveSensorData("light_upper", parseFloat(light.toFixed(2)));
 }
 setInterval(fakeLight, 5000);
 
@@ -73,6 +116,9 @@ function fakeLightLower() {
     const variation = (Math.random() - 0.5) * 2 * MAX_LIGHT_VARIATION_LOWER;
     lightLower += variation;
     lightLower = Math.max(0, Math.min(1000, lightLower));
+
+    // Save to database
+    saveSensorData("light_lower", parseFloat(lightLower.toFixed(2)));
 }
 setInterval(fakeLightLower, 5000);
 
@@ -93,6 +139,9 @@ function fakeCO2() {
     const variation = (Math.random() - 0.5) * 2 * MAX_CO2_VARIATION;
     co2 += variation;
     co2 = Math.max(300, Math.min(2000, co2));
+
+    // Save to database
+    saveSensorData("co2", parseFloat(co2.toFixed(2)));
 }
 setInterval(fakeCO2, 5000);
 
@@ -102,6 +151,7 @@ app.get("/api/co2", (req, res) => {
         timestamp: Date.now()
     });
 });
+
 
 
 app.listen(PORT, () => {
