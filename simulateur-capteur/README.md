@@ -17,7 +17,7 @@ L'API sera accessible sur `http://localhost:3000`
 
 ## Endpoint
 
-### GET /api/temp
+### GET /api/temperature
 
 Retourne la température simulée actuelle.
 
@@ -32,7 +32,7 @@ Retourne la température simulée actuelle.
 ## Simulation
 
 - Température de base : 20°C
-- Variation : ±2°C toutes les 5 secondes
+- Variation : ±1°C toutes les 5 secondes
 - Plage : 10°C à 35°C
 
 ## Technologies
