@@ -170,118 +170,119 @@
             {@const config = SENSOR_CONFIG[type]}
             {@const critical = isCritical(type, sensor.current)}
             {@const statusClass = getStatusClass(type, sensor.current)}
-
-            <div class="sensor-card {statusClass} {critical ? 'critical-pulse' : ''}">
-
-                <!-- En-tête carte -->
-                <div class="card-header">
-                    <div class="icon-wrapper">
-                        <span class="sensor-icon">{config.icon}</span>
-                    </div>
-                    <h3>{config.label}</h3>
-                    <span class="status-dot {statusClass}"></span>
-                </div>
-
-                <!-- Valeur principale -->
-                <div class="current-value">
-                    {#if sensor.current !== null}
-                        <span class="value">{sensor.current.toFixed(1)}</span>
-                        <span class="unit">{config.unit}</span>
-                    {:else}
-                        <span class="no-data">—</span>
-                    {/if}
-                </div>
-
-                <!-- Stats min / avg / max -->
-                <div class="stats-row">
-                    <div class="stat">
-                        <span class="stat-label">Min</span>
-                        <span class="stat-value min">{sensor.min?.toFixed(1) ?? '—'}</span>
-                    </div>
-                    <div class="stat">
-                        <span class="stat-label">Moy</span>
-                        <span class="stat-value avg">{sensor.avg?.toFixed(1) ?? '—'}</span>
-                    </div>
-                    <div class="stat">
-                        <span class="stat-label">Max</span>
-                        <span class="stat-value max">{sensor.max?.toFixed(1) ?? '—'}</span>
-                    </div>
-                </div>
-
-                <!-- Sparkline -->
-                <div class="chart-container">
-                    {#if sensor.history && sensor.history.length >= 2}
-                        <svg
-                            viewBox="0 0 300 80"
-                            preserveAspectRatio="none"
-                            class="sparkline"
-                            aria-label="Graphique {config.label}"
-                        >
-                            <!-- Gradient de fond -->
-                            <defs>
-                                <linearGradient id="gradient-{type}" x1="0%" y1="0%" x2="0%" y2="100%">
-                                    <stop offset="0%" style="stop-color:{critical ? 'rgb(252, 129, 129)' : 'rgb(104, 211, 145)'};stop-opacity:0.2" />
-                                    <stop offset="100%" style="stop-color:{critical ? 'rgb(252, 129, 129)' : 'rgb(104, 211, 145)'};stop-opacity:0" />
-                                </linearGradient>
-                            </defs>
-
-                            <!-- Zone remplie -->
-                            <polyline
-                                points="{buildSparkline(sensor.history)} 300,80 0,80"
-                                fill="url(#gradient-{type})"
-                                stroke="none"
-                            />
-
-                            <!-- Ligne de la valeur -->
-                            <polyline
-                                points={buildSparkline(sensor.history)}
-                                fill="none"
-                                stroke={critical ? '#fc8181' : '#68d391'}
-                                stroke-width="2.5"
-                                stroke-linejoin="round"
-                                stroke-linecap="round"
-                            />
-
-                            <!-- Point actuel -->
-                            {#if sensor.history.length > 0}
-                                {@const lastIdx = sensor.history.length - 1}
-                                {@const values = sensor.history.map(h => h.value)}
-                                {@const minV = Math.min(...values)}
-                                {@const maxV = Math.max(...values)}
-                                {@const range = maxV - minV || 1}
-                                {@const cx = 300}
-                                {@const cy = 80 - ((values[lastIdx] - minV) / range) * 80}
-                                <circle
-                                    cx={cx}
-                                    cy={cy}
-                                    r="5"
-                                    fill={critical ? '#fc8181' : '#68d391'}
-                                    stroke={critical ? '#fef2f2' : '#f0fff4'}
-                                    stroke-width="2"
-                                />
-                            {/if}
-                        </svg>
-
-                        <!-- Labels axe -->
-                        <div class="chart-labels">
-                            <span>{sensor.history[0]?.timestamp
-                                ? new Date(sensor.history[0].timestamp).toLocaleTimeString()
-                                : ''}</span>
-                            <span>{sensor.history[sensor.history.length - 1]?.timestamp
-                                ? new Date(sensor.history[sensor.history.length - 1].timestamp).toLocaleTimeString()
-                                : ''}</span>
+            <a href="/{type}">
+                <div class="sensor-card {statusClass} {critical ? 'critical-pulse' : ''}">
+                    <!-- En-tête carte -->
+                    <div class="card-header">
+                        <div class="icon-wrapper">
+                            <span class="sensor-icon">{config.icon}</span>
                         </div>
-                    {:else}
-                        <div class="no-chart">Pas assez de données</div>
-                    {/if}
-                </div>
+                        <h3>{config.label}</h3>
+                        <span class="status-dot {statusClass}"></span>
+                    </div>
 
-                <!-- Seuils critiques -->
-                <div class="thresholds">
-                    <span class="threshold-min">Min: {config.criticalMin}{config.unit}</span>
-                    <span class="threshold-max">Max: {config.criticalMax}{config.unit}</span>
+                    <!-- Valeur principale -->
+                    <div class="current-value">
+                        {#if sensor.current !== null}
+                            <span class="value">{sensor.current.toFixed(1)}</span>
+                            <span class="unit">{config.unit}</span>
+                        {:else}
+                            <span class="no-data">—</span>
+                        {/if}
+                    </div>
+
+                    <!-- Stats min / avg / max -->
+                    <div class="stats-row">
+                        <div class="stat">
+                            <span class="stat-label">Min</span>
+                            <span class="stat-value min">{sensor.min?.toFixed(1) ?? '—'}</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-label">Moy</span>
+                            <span class="stat-value avg">{sensor.avg?.toFixed(1) ?? '—'}</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-label">Max</span>
+                            <span class="stat-value max">{sensor.max?.toFixed(1) ?? '—'}</span>
+                        </div>
+                    </div>
+
+                    <!-- Sparkline -->
+                    <div class="chart-container">
+                        {#if sensor.history && sensor.history.length >= 2}
+                            <svg
+                                viewBox="0 0 300 80"
+                                preserveAspectRatio="none"
+                                class="sparkline"
+                                aria-label="Graphique {config.label}"
+                            >
+                                <!-- Gradient de fond -->
+                                <defs>
+                                    <linearGradient id="gradient-{type}" x1="0%" y1="0%" x2="0%" y2="100%">
+                                        <stop offset="0%" style="stop-color:{critical ? 'rgb(252, 129, 129)' : 'rgb(104, 211, 145)'};stop-opacity:0.2" />
+                                        <stop offset="100%" style="stop-color:{critical ? 'rgb(252, 129, 129)' : 'rgb(104, 211, 145)'};stop-opacity:0" />
+                                    </linearGradient>
+                                </defs>
+
+                                <!-- Zone remplie -->
+                                <polyline
+                                    points="{buildSparkline(sensor.history)} 300,80 0,80"
+                                    fill="url(#gradient-{type})"
+                                    stroke="none"
+                                />
+
+                                <!-- Ligne de la valeur -->
+                                <polyline
+                                    points={buildSparkline(sensor.history)}
+                                    fill="none"
+                                    stroke={critical ? '#fc8181' : '#68d391'}
+                                    stroke-width="2.5"
+                                    stroke-linejoin="round"
+                                    stroke-linecap="round"
+                                />
+
+                                <!-- Point actuel -->
+                                {#if sensor.history.length > 0}
+                                    {@const lastIdx = sensor.history.length - 1}
+                                    {@const values = sensor.history.map(h => h.value)}
+                                    {@const minV = Math.min(...values)}
+                                    {@const maxV = Math.max(...values)}
+                                    {@const range = maxV - minV || 1}
+                                    {@const cx = 300}
+                                    {@const cy = 80 - ((values[lastIdx] - minV) / range) * 80}
+                                    <circle
+                                        cx={cx}
+                                        cy={cy}
+                                        r="5"
+                                        fill={critical ? '#fc8181' : '#68d391'}
+                                        stroke={critical ? '#fef2f2' : '#f0fff4'}
+                                        stroke-width="2"
+                                    />
+                                {/if}
+                            </svg>
+
+                            <!-- Labels axe -->
+                            <div class="chart-labels">
+                                <span>{sensor.history[0]?.timestamp
+                                    ? new Date(sensor.history[0].timestamp).toLocaleTimeString()
+                                    : ''}</span>
+                                <span>{sensor.history[sensor.history.length - 1]?.timestamp
+                                    ? new Date(sensor.history[sensor.history.length - 1].timestamp).toLocaleTimeString()
+                                    : ''}</span>
+                            </div>
+                        {:else}
+                            <div class="no-chart">Pas assez de données</div>
+                        {/if}
+                    </div>
+
+                    <!-- Seuils critiques -->
+                    <div class="thresholds">
+                        <span class="threshold-min">Min: {config.criticalMin}{config.unit}</span>
+                        <span class="threshold-max">Max: {config.criticalMax}{config.unit}</span>
+                    </div>
                 </div>
-            </div>
+            </a>
+            
         {/each}
     </section>
 
