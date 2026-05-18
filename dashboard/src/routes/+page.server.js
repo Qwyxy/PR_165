@@ -5,7 +5,7 @@ const SENSOR_CONFIG = {
         label: 'Température',
         unit: '°C',
         icon: '🌡️',
-        criticalMin: 10,
+        criticalMin: 20,
         criticalMax: 30,
         historyLimit: 50
     },
@@ -13,8 +13,8 @@ const SENSOR_CONFIG = {
         label: 'Humidité',
         unit: '%',
         icon: '💧',
-        criticalMin: 30,
-        criticalMax: 80,
+        criticalMin: 50,
+        criticalMax: 95,
         historyLimit: 50
     },
     co2: {

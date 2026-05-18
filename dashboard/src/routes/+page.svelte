@@ -1,5 +1,6 @@
 <script>
     import { onMount } from 'svelte';
+    import refreshIcon from '$lib/images/refresh.png'; 
 
     let { data } = $props();
 
@@ -125,12 +126,18 @@
     <!-- Header -->
     <header>
         <div class="header-left">
-            <h1>Dashboard Capteurs</h1>
-            <span class="last-updated">Mis à jour : {lastUpdated}</span>
+            <h1>
+                <span class="gradient-text">Dashboard</span> Capteurs
+            </h1>
+            <div class="last-updated">
+                <img src={refreshIcon} alt="Refresh" class="update-icon" />
+                Mis à jour : {lastUpdated}
+            </div>
         </div>
         {#if alerts.length > 0}
             <div class="alert-badge">
-                ⚠️ {alerts.length} alerte{alerts.length > 1 ? 's' : ''}
+                <span class="badge-icon">⚠️</span>
+                <span class="badge-text">{alerts.length} alerte{alerts.length > 1 ? 's' : ''}</span>
             </div>
         {/if}
     </header>
@@ -138,7 +145,10 @@
     <!-- Alertes -->
     {#if alerts.length > 0}
         <section class="alerts-section">
-            <h2>⚠️ Alertes actives</h2>
+            <h2>
+                <span class="section-icon">⚠️</span>
+                Alertes actives
+            </h2>
             <div class="alerts-list">
                 {#each alerts as alert (alert.id)}
                     <div class="alert-item alert-{alert.type}">
@@ -165,7 +175,9 @@
 
                 <!-- En-tête carte -->
                 <div class="card-header">
-                    <span class="sensor-icon">{config.icon}</span>
+                    <div class="icon-wrapper">
+                        <span class="sensor-icon">{config.icon}</span>
+                    </div>
                     <h3>{config.label}</h3>
                     <span class="status-dot {statusClass}"></span>
                 </div>
@@ -205,16 +217,27 @@
                             class="sparkline"
                             aria-label="Graphique {config.label}"
                         >
-                            <!-- Zone de seuil critique -->
-                            <rect x="0" y="0" width="300" height="80"
-                                fill="none" stroke="none" />
+                            <!-- Gradient de fond -->
+                            <defs>
+                                <linearGradient id="gradient-{type}" x1="0%" y1="0%" x2="0%" y2="100%">
+                                    <stop offset="0%" style="stop-color:{critical ? 'rgb(252, 129, 129)' : 'rgb(104, 211, 145)'};stop-opacity:0.2" />
+                                    <stop offset="100%" style="stop-color:{critical ? 'rgb(252, 129, 129)' : 'rgb(104, 211, 145)'};stop-opacity:0" />
+                                </linearGradient>
+                            </defs>
+
+                            <!-- Zone remplie -->
+                            <polyline
+                                points="{buildSparkline(sensor.history)} 300,80 0,80"
+                                fill="url(#gradient-{type})"
+                                stroke="none"
+                            />
 
                             <!-- Ligne de la valeur -->
                             <polyline
                                 points={buildSparkline(sensor.history)}
                                 fill="none"
                                 stroke={critical ? '#fc8181' : '#68d391'}
-                                stroke-width="2"
+                                stroke-width="2.5"
                                 stroke-linejoin="round"
                                 stroke-linecap="round"
                             />
@@ -231,8 +254,10 @@
                                 <circle
                                     cx={cx}
                                     cy={cy}
-                                    r="4"
+                                    r="5"
                                     fill={critical ? '#fc8181' : '#68d391'}
+                                    stroke={critical ? '#fef2f2' : '#f0fff4'}
+                                    stroke-width="2"
                                 />
                             {/if}
                         </svg>
@@ -242,21 +267,19 @@
                             <span>{sensor.history[0]?.timestamp
                                 ? new Date(sensor.history[0].timestamp).toLocaleTimeString()
                                 : ''}</span>
-                            <span>Maintenant</span>
+                            <span>{sensor.history[sensor.history.length - 1]?.timestamp
+                                ? new Date(sensor.history[sensor.history.length - 1].timestamp).toLocaleTimeString()
+                                : ''}</span>
                         </div>
                     {:else}
-                        <p class="no-chart">Données insuffisantes</p>
+                        <div class="no-chart">Pas assez de données</div>
                     {/if}
                 </div>
 
-                <!-- Seuils -->
+                <!-- Seuils critiques -->
                 <div class="thresholds">
-                    <span class="threshold-item">
-                        🔵 Min critique : {config.criticalMin}{config.unit}
-                    </span>
-                    <span class="threshold-item">
-                        🔴 Max critique : {config.criticalMax}{config.unit}
-                    </span>
+                    <span class="threshold-min">Min: {config.criticalMin}{config.unit}</span>
+                    <span class="threshold-max">Max: {config.criticalMax}{config.unit}</span>
                 </div>
             </div>
         {/each}
@@ -265,15 +288,21 @@
 </main>
 
 <style>
-    /* ── Reset & Base ─────────────────────────────────────────────────────────── */
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    /* ── Global & Reset ───────────────────────────────────────────────────────── */
+    :global(body) {
+        margin: 0;
+        padding: 0;
+        background: linear-gradient(135deg, #0a0e1a 0%, #1a1f2e 50%, #0f1419 100%);
+        background-attachment: fixed;
+        min-height: 100vh;
+    }
 
     main {
-        min-height: 100vh;
-        background: #0f1117;
+        max-width: 1400px;
+        margin: 0 auto;
         color: #e2e8f0;
-        font-family: 'Segoe UI', system-ui, sans-serif;
-        padding: 2rem;
+        font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+        padding: 2.5rem;
     }
 
     /* ── Header ───────────────────────────────────────────────────────────────── */
@@ -281,237 +310,457 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 2rem;
+        margin-bottom: 3rem;
+        background: rgba(26, 31, 46, 0.6);
+        backdrop-filter: blur(20px);
+        border-radius: 1.25rem;
+        padding: 1.75rem 2rem;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
     }
 
     h1 {
-        font-size: 1.8rem;
-        font-weight: 700;
+        font-size: 2rem;
+        font-weight: 800;
         color: #f7fafc;
+        margin: 0;
+        letter-spacing: -0.02em;
+    }
+
+    .gradient-text {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
     }
 
     .last-updated {
-        font-size: 0.8rem;
-        color: #718096;
-        display: block;
-        margin-top: 0.25rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.875rem;
+        color: #94a3b8;
+        margin-top: 0.5rem;
+        font-weight: 500;
+    }
+
+    .update-icon {
+        width: 14px;
+        height: 14px;
+        animation: rotate 3s linear infinite;
+    }
+
+    @keyframes rotate {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
     }
 
     .alert-badge {
-        background: #742a2a;
-        color: #feb2b2;
-        padding: 0.5rem 1rem;
-        border-radius: 2rem;
-        font-weight: 600;
-        animation: pulse 2s infinite;
+        display: flex;
+        align-items: center;
+        gap: 0.625rem;
+        background: linear-gradient(135deg, rgba(185, 28, 28, 0.15) 0%, rgba(127, 29, 29, 0.15) 100%);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(252, 129, 129, 0.3);
+        color: #fca5a5;
+        padding: 0.875rem 1.5rem;
+        border-radius: 3rem;
+        font-weight: 700;
+        font-size: 0.9rem;
+        animation: pulse-alert 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        box-shadow: 0 4px 20px rgba(252, 129, 129, 0.2);
+    }
+
+    .badge-icon {
+        font-size: 1.25rem;
+        animation: shake 0.5s infinite;
+    }
+
+    @keyframes shake {
+        0%, 100% { transform: rotate(0deg); }
+        25% { transform: rotate(-10deg); }
+        75% { transform: rotate(10deg); }
+    }
+
+    @keyframes pulse-alert {
+        0%, 100% { opacity: 1; transform: scale(1); }
+        50% { opacity: 0.85; transform: scale(1.02); }
     }
 
     /* ── Alertes ──────────────────────────────────────────────────────────────── */
     .alerts-section {
-        margin-bottom: 2rem;
+        margin-bottom: 2.5rem;
     }
 
     .alerts-section h2 {
-        font-size: 1rem;
-        color: #fc8181;
-        margin-bottom: 0.75rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        font-size: 1.1rem;
+        color: #fca5a5;
+        margin-bottom: 1rem;
         text-transform: uppercase;
-        letter-spacing: 0.05em;
+        letter-spacing: 0.08em;
+        font-weight: 700;
+    }
+
+    .section-icon {
+        font-size: 1.25rem;
     }
 
     .alerts-list {
         display: flex;
         flex-direction: column;
-        gap: 0.5rem;
+        gap: 0.75rem;
     }
 
     .alert-item {
         display: flex;
         align-items: center;
-        gap: 1rem;
-        padding: 0.75rem 1rem;
-        border-radius: 0.5rem;
+        gap: 1.25rem;
+        padding: 1.25rem 1.5rem;
+        border-radius: 0.875rem;
         border-left: 4px solid;
+        background: rgba(26, 31, 46, 0.6);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .alert-item:hover {
+        transform: translateX(4px);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
     }
 
     .alert-high {
-        background: #2d1515;
-        border-color: #fc8181;
+        background: linear-gradient(135deg, rgba(45, 21, 21, 0.7) 0%, rgba(55, 25, 25, 0.5) 100%);
+        border-left-color: #fc8181;
     }
 
     .alert-low {
-        background: #1a2535;
-        border-color: #63b3ed;
+        background: linear-gradient(135deg, rgba(26, 37, 53, 0.7) 0%, rgba(30, 45, 65, 0.5) 100%);
+        border-left-color: #63b3ed;
     }
 
-    .alert-icon { font-size: 1.5rem; }
+    .alert-icon {
+        font-size: 2rem;
+        filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+    }
 
     .alert-content {
         flex: 1;
         display: flex;
         flex-direction: column;
-        gap: 0.1rem;
+        gap: 0.25rem;
     }
 
-    .alert-content strong { color: #f7fafc; }
-    .alert-content span   { font-size: 0.85rem; color: #a0aec0; }
-    .alert-time           { font-size: 0.75rem; color: #718096; }
+    .alert-content strong {
+        color: #f7fafc;
+        font-weight: 600;
+        font-size: 1rem;
+    }
+
+    .alert-content span {
+        font-size: 0.875rem;
+        color: #cbd5e0;
+        line-height: 1.5;
+    }
+
+    .alert-time {
+        font-size: 0.8rem;
+        color: #94a3b8;
+        font-weight: 500;
+    }
 
     /* ── Grille capteurs ──────────────────────────────────────────────────────── */
     .sensors-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-        gap: 1.5rem;
+        grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+        gap: 1.75rem;
     }
 
     /* ── Carte ────────────────────────────────────────────────────────────────── */
     .sensor-card {
-        background: #1a1f2e;
-        border-radius: 1rem;
-        padding: 1.5rem;
-        border: 1px solid #2d3748;
+        background: rgba(26, 31, 46, 0.6);
+        backdrop-filter: blur(20px);
+        border-radius: 1.25rem;
+        padding: 1.75rem;
+        border: 1px solid rgba(255, 255, 255, 0.08);
         display: flex;
         flex-direction: column;
-        gap: 1rem;
-        transition: transform 0.2s, box-shadow 0.2s;
+        gap: 1.25rem;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .sensor-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, transparent, currentColor, transparent);
+        opacity: 0;
+        transition: opacity 0.4s;
     }
 
     .sensor-card:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+        transform: translateY(-6px);
+        box-shadow: 0 16px 48px rgba(0, 0, 0, 0.4);
+        border-color: rgba(255, 255, 255, 0.15);
     }
 
-    .sensor-card.status-critical { border-color: #fc8181; }
-    .sensor-card.status-warning  { border-color: #f6ad55; }
-    .sensor-card.status-ok       { border-color: #68d391; }
+    .sensor-card:hover::before {
+        opacity: 0.6;
+    }
+
+    .sensor-card.status-critical {
+        border-color: rgba(252, 129, 129, 0.4);
+        color: #fc8181;
+    }
+
+    .sensor-card.status-warning {
+        border-color: rgba(246, 173, 85, 0.4);
+        color: #f6ad55;
+    }
+
+    .sensor-card.status-ok {
+        border-color: rgba(104, 211, 145, 0.4);
+        color: #68d391;
+    }
 
     .critical-pulse {
-        animation: borderPulse 2s infinite;
+        animation: borderPulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
     }
 
     /* ── En-tête carte ────────────────────────────────────────────────────────── */
     .card-header {
         display: flex;
         align-items: center;
-        gap: 0.75rem;
+        gap: 1rem;
     }
 
-    .sensor-icon { font-size: 1.5rem; }
+    .icon-wrapper {
+        width: 48px;
+        height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 0.875rem;
+        font-size: 1.75rem;
+        filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.2));
+        transition: transform 0.3s;
+    }
+
+    .sensor-card:hover .icon-wrapper {
+        transform: scale(1.1);
+    }
 
     h3 {
         flex: 1;
-        font-size: 1rem;
+        font-size: 1.1rem;
         font-weight: 600;
-        color: #e2e8f0;
+        color: #f7fafc;
+        letter-spacing: -0.01em;
     }
 
     .status-dot {
-        width: 10px;
-        height: 10px;
+        width: 12px;
+        height: 12px;
         border-radius: 50%;
+        box-shadow: 0 2px 8px currentColor;
     }
 
-    .status-dot.status-ok       { background: #68d391; }
-    .status-dot.status-warning  { background: #f6ad55; }
-    .status-dot.status-critical { background: #fc8181; animation: pulse 1s infinite; }
-    .status-dot.status-unknown  { background: #718096; }
+    .status-dot.status-ok {
+        background: #68d391;
+    }
+
+    .status-dot.status-warning {
+        background: #f6ad55;
+        animation: pulse-dot 2s infinite;
+    }
+
+    .status-dot.status-critical {
+        background: #fc8181;
+        animation: pulse-dot 1s infinite;
+    }
+
+    .status-dot.status-unknown {
+        background: #94a3b8;
+    }
+
+    @keyframes pulse-dot {
+        0%, 100% { opacity: 1; transform: scale(1); }
+        50% { opacity: 0.5; transform: scale(1.2); }
+    }
 
     /* ── Valeur principale ────────────────────────────────────────────────────── */
     .current-value {
         display: flex;
         align-items: baseline;
-        gap: 0.5rem;
+        gap: 0.75rem;
+        margin: 0.5rem 0;
     }
 
     .value {
-        font-size: 3rem;
-        font-weight: 700;
+        font-size: 3.5rem;
+        font-weight: 800;
         color: #f7fafc;
         line-height: 1;
+        letter-spacing: -0.02em;
+        text-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
     }
 
-    .unit    { font-size: 1.2rem; color: #718096; }
-    .no-data { font-size: 2rem; color: #4a5568; }
+    .unit {
+        font-size: 1.25rem;
+        color: #94a3b8;
+        font-weight: 600;
+    }
+
+    .no-data {
+        font-size: 2.5rem;
+        color: #64748b;
+    }
 
     /* ── Stats ────────────────────────────────────────────────────────────────── */
     .stats-row {
         display: grid;
         grid-template-columns: repeat(3, 1fr);
-        gap: 0.5rem;
-        background: #0f1117;
-        border-radius: 0.5rem;
-        padding: 0.75rem;
+        gap: 0.75rem;
+        background: rgba(15, 17, 23, 0.7);
+        border-radius: 0.875rem;
+        padding: 1rem;
+        border: 1px solid rgba(255, 255, 255, 0.05);
     }
 
     .stat {
         display: flex;
         flex-direction: column;
         align-items: center;
-        gap: 0.2rem;
+        gap: 0.375rem;
     }
 
     .stat-label {
-        font-size: 0.7rem;
-        color: #718096;
+        font-size: 0.75rem;
+        color: #94a3b8;
         text-transform: uppercase;
+        font-weight: 600;
+        letter-spacing: 0.05em;
     }
 
-    .stat-value       { font-size: 1rem; font-weight: 600; }
-    .stat-value.min   { color: #63b3ed; }
-    .stat-value.avg   { color: #e2e8f0; }
-    .stat-value.max   { color: #fc8181; }
+    .stat-value {
+        font-size: 1.125rem;
+        font-weight: 700;
+        text-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    .stat-value.min {
+        color: #63b3ed;
+    }
+
+    .stat-value.avg {
+        color: #f7fafc;
+    }
+
+    .stat-value.max {
+        color: #fc8181;
+    }
 
     /* ── Graphique ────────────────────────────────────────────────────────────── */
     .chart-container {
-        background: #0f1117;
-        border-radius: 0.5rem;
-        padding: 0.5rem;
+        background: rgba(15, 17, 23, 0.7);
+        border-radius: 0.875rem;
+        padding: 0.75rem;
+        border: 1px solid rgba(255, 255, 255, 0.05);
     }
 
     .sparkline {
         width: 100%;
         height: 80px;
         display: block;
+        filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.3));
     }
 
     .chart-labels {
         display: flex;
         justify-content: space-between;
-        font-size: 0.65rem;
-        color: #4a5568;
-        margin-top: 0.25rem;
+        font-size: 0.7rem;
+        color: #64748b;
+        margin-top: 0.5rem;
+        font-weight: 500;
     }
 
     .no-chart {
         text-align: center;
-        color: #4a5568;
-        font-size: 0.8rem;
-        padding: 1rem;
+        color: #64748b;
+        font-size: 0.875rem;
+        padding: 1.5rem;
+        font-weight: 500;
     }
 
     /* ── Seuils ───────────────────────────────────────────────────────────────── */
     .thresholds {
         display: flex;
         justify-content: space-between;
-        font-size: 0.72rem;
-        color: #718096;
+        font-size: 0.75rem;
+        color: #94a3b8;
+        padding: 0.5rem 0.75rem;
+        background: rgba(15, 17, 23, 0.5);
+        border-radius: 0.5rem;
+        font-weight: 500;
     }
 
     /* ── Animations ───────────────────────────────────────────────────────────── */
-    @keyframes pulse {
-        0%, 100% { opacity: 1; }
-        50%       { opacity: 0.4; }
-    }
-
     @keyframes borderPulse {
-        0%, 100% { box-shadow: 0 0 0 0 rgba(252, 129, 129, 0.4); }
-        50%       { box-shadow: 0 0 0 8px rgba(252, 129, 129, 0); }
+        0%, 100% {
+            box-shadow: 0 0 0 0 rgba(252, 129, 129, 0.4),
+                        0 8px 24px rgba(0, 0, 0, 0.3);
+        }
+        50% {
+            box-shadow: 0 0 0 12px rgba(252, 129, 129, 0),
+                        0 8px 24px rgba(0, 0, 0, 0.3);
+        }
     }
 
     /* ── Responsive ───────────────────────────────────────────────────────────── */
-    @media (max-width: 640px) {
-        main            { padding: 1rem; }
-        .sensors-grid   { grid-template-columns: 1fr; }
-        .value          { font-size: 2.2rem; }
+    @media (max-width: 768px) {
+        main {
+            padding: 1.5rem;
+        }
+
+        header {
+            flex-direction: column;
+            gap: 1rem;
+            align-items: flex-start;
+        }
+
+        .sensors-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .value {
+            font-size: 2.75rem;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+        }
+    }
+
+    @media (max-width: 480px) {
+        main {
+            padding: 1rem;
+        }
+
+        .value {
+            font-size: 2.25rem;
+        }
+
+        .sensor-card {
+            padding: 1.25rem;
+        }
     }
 </style>
