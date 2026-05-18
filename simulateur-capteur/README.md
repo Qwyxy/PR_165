@@ -1,10 +1,10 @@
-# API Simulateur de Capteurs
+# Simulateur de Capteurs
 
 Une API qui simule plusieurs capteurs environnementaux et sauvegarde les données dans MongoDB pour le dashboard de visualisation.
 
 ## Architecture
 
-- **API Simulateur** (ce projet) : Génère et stocke les données des capteurs
+- **Simulateur** (ce projet) : Génère et stocke les données des capteurs
 - **Dashboard** (`../dashboard/`) : Interface web pour visualiser les données
 
 ## Installation
